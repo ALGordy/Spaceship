@@ -89,11 +89,13 @@ if __name__ == '__main__':
                     delta_y = 5
                 if pygame.key.get_pressed()[pygame.K_w]:
                     delta_y = -5
-            if event.type == pygame.KEYUP:
-                moving = False
+            if event.type == pygame.KEYUP and (event.key == pygame.K_a or event.key == pygame.K_d):
                 delta_x = 0
+            if event.type == pygame.KEYUP and (event.key == pygame.K_w or event.key == pygame.K_s):
                 delta_y = 0
-        spaceship.moving(delta_x, delta_y)
+
+        spaceship.moving(delta_x, 0)
+        spaceship.moving(0, delta_y)
         all_sprites.update()
         screen.fill((0, 0, 0))
         all_sprites.draw(screen)
