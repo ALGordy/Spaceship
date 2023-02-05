@@ -142,10 +142,10 @@ if __name__ == '__main__':
                 print(spaceship.bonuses)
                 if spaceship.bonuses == 1:
                     bullet = Bullet(spaceship.x + 20, spaceship.y)
-                elif 10 >= spaceship.bonuses > 1:
+                elif 15 > spaceship.bonuses > 1:
                     bullet = Bullet(spaceship.x, spaceship.y)
                     bullet1 = Bullet(spaceship.x + 40, spaceship.y)
-                elif 20 <= spaceship.bonuses:
+                elif 15 <= spaceship.bonuses:
                     bullet = Bullet(spaceship.x + 20, spaceship.y)
                     bullet1 = Bullet(spaceship.x, spaceship.y)
                     bullet2 = Bullet(spaceship.x + 40, spaceship.y)
