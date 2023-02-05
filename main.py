@@ -238,10 +238,13 @@ if __name__ == '__main__':
             if event.type == pygame.KEYUP and (event.key == pygame.K_a or event.key == pygame.K_d):
                 delta_x = 0
                 spaceship.upd_img(0)
-
+                count_mov = 0
+                povorot = 0
             if event.type == pygame.KEYUP and (event.key == pygame.K_w or event.key == pygame.K_s):
                 delta_y = 0
                 spaceship.upd_img(0)
+                count_mov = 0
+                povorot = 0
         clock = pygame.time.Clock()
         fon = pygame.transform.scale(load_image('fon.png'), (width, height))
         screen.blit(fon, (0, 0))
@@ -249,11 +252,11 @@ if __name__ == '__main__':
         spaceship.moving(0, delta_y)
         asteroids_count += 1
         bonuses_count += 1
-        if asteroids_count % 5 == 0 and asteroids_count % 10 != 0 and asteroids_count % 15 != 0:
+        if asteroids_count % 2 == 0 and asteroids_count % 4 != 0 and asteroids_count % 6 != 0:
             Asteroid(random.randint(0, width), -30, 0)
-        if asteroids_count % 15 == 0 and asteroids_count % 10 != 0:
+        if asteroids_count % 4 == 0 and asteroids_count % 6 != 0:
             Asteroid(random.randint(0, width), -30, 1)
-        if asteroids_count % 10 == 0:
+        if asteroids_count % 6 == 0:
             Asteroid(random.randint(0, width), -30, 2)
         if bonuses_count % 100 == 0:
             Bonus(random.randint(0, width), -30)
