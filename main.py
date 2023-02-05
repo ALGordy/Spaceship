@@ -10,11 +10,13 @@ moving = True
 delta_x = 0
 delta_y = 0
 asteroids_count = 0
+bonuses_count = 0
 all_sprites = pygame.sprite.Group()
 horizontal_borders = pygame.sprite.Group()
 vertical_borders = pygame.sprite.Group()
 bullets_sprite = pygame.sprite.Group()
 asteroid_sprite = pygame.sprite.Group()
+bonuses_sprite = pygame.sprite.Group()
 
 
 class Spaceship(pygame.sprite.Sprite):
@@ -22,6 +24,8 @@ class Spaceship(pygame.sprite.Sprite):
         super().__init__(all_sprites)
         self.x = x
         self.y = y
+        self.bonuses = 1
+        self.bonusrect = True
         self.add(all_sprites)
         self.image = pygame.Surface([50, 50])
         self.image.fill((0, 0, 255))
@@ -37,6 +41,8 @@ class Spaceship(pygame.sprite.Sprite):
         if pygame.sprite.spritecollideany(self, asteroid_sprite):
             self.kill()
             pygame.quit()
+        if pygame.sprite.spritecollideany(self, bonuses_sprite) and self.bonusrect:
+            self.bonuses += 1
 
 
 class Bullet(pygame.sprite.Sprite):
@@ -53,7 +59,8 @@ class Bullet(pygame.sprite.Sprite):
     def update(self):
         self.y -= 10
         self.rect = pygame.Rect(self.x, self.y, 10, 10)
-        running = False
+        if self.y < -50 or self.y > 1050 or pygame.sprite.spritecollideany(self, asteroid_sprite):
+            self.kill()
 
 
 class Border(pygame.sprite.Sprite):
@@ -97,6 +104,28 @@ class Asteroid(pygame.sprite.Sprite):
             self.kill()
 
 
+class Bonus(pygame.sprite.Sprite):
+    def __init__(self, radius, x, y):
+        super().__init__(all_sprites)
+        self.x = x
+        self.y = y
+        self.add(bonuses_sprite)
+        self.radius = radius
+        self.image = pygame.Surface((2 * radius, 2 * radius),
+                                    pygame.SRCALPHA, 32)
+        pygame.draw.circle(self.image, pygame.Color("yellow"),
+                           (radius, radius), radius)
+        self.rect = pygame.Rect(x, y, 2 * radius, 2 * radius)
+        self.vx = random.randint(0, 5)
+        self.vy = random.randrange(10, 15)
+
+    # движение с проверкой столкновение шара со стенками
+    def update(self):
+        self.rect = self.rect.move(self.vx, self.vy)
+        if pygame.sprite.spritecollideany(self, vertical_borders):
+            self.vx = -self.vx
+
+
 Border(width - 0, 0, width - 0, height - 0)
 Border(-1, -1, -1, height + 1)
 
@@ -110,7 +139,16 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                bullet = Bullet(spaceship.x + 20, spaceship.y)
+                print(spaceship.bonuses)
+                if spaceship.bonuses == 1:
+                    bullet = Bullet(spaceship.x + 20, spaceship.y)
+                elif 10 >= spaceship.bonuses > 1:
+                    bullet = Bullet(spaceship.x, spaceship.y)
+                    bullet1 = Bullet(spaceship.x + 40, spaceship.y)
+                elif 20 <= spaceship.bonuses:
+                    bullet = Bullet(spaceship.x + 20, spaceship.y)
+                    bullet1 = Bullet(spaceship.x, spaceship.y)
+                    bullet2 = Bullet(spaceship.x + 40, spaceship.y)
             if event.type == pygame.KEYDOWN:
                 moving = True
                 if pygame.key.get_pressed()[pygame.K_d]:
@@ -129,9 +167,11 @@ if __name__ == '__main__':
         spaceship.moving(delta_x, 0)
         spaceship.moving(0, delta_y)
         asteroids_count += 1
+        bonuses_count += 1
         if asteroids_count % 10 == 0:
             Asteroid(30, random.randint(0, width), -30)
-
+        if bonuses_count % 100 == 0:
+            Bonus(30, random.randint(0, width), -30)
         all_sprites.update()
         screen.fill((0, 0, 0))
         all_sprites.draw(screen)
