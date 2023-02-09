@@ -117,7 +117,16 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.y -= 10
         self.rect = pygame.Rect(self.rect.x, self.rect.y, 10, 10)
         for i in asteroid_sprite:
-            if (self.rect.y < -50 or self.rect.y > 1050 or pygame.sprite.collide_mask(self, i)) and i.alive:
+            if self.rect.y < -50 or self.rect.y > 1000 or (pygame.sprite.collide_mask(self, i) and i.alive == 1):
+                if pygame.sprite.collide_mask(self, i) and i.alive == 1:
+                    i.alive = 0
+                    i.time = 1
+                    if i.typ == 1:
+                        i.image = load_image("collapse_sm.png")
+                    elif i.typ == 2:
+                        i.image = load_image("collapse_md.png")
+                    else:
+                        i.image = load_image("collapse.png")
                 self.kill()
 
 
@@ -145,10 +154,13 @@ class Asteroid(pygame.sprite.Sprite):
         super().__init__(all_sprites)
         self.add(asteroid_sprite)
         if flag == 1:
+            self.typ = 1
             self.image = load_image("asteroid.png")
         elif flag == 2:
+            self.typ = 2
             self.image = load_image("big_asteroid.png")
         else:
+            self.typ = 3
             self.image = load_image("mid_asteroid.png")
         self.rect = self.image.get_rect()
         # вычисляем маску для эффективного сравнения
@@ -169,15 +181,36 @@ class Asteroid(pygame.sprite.Sprite):
                     self.vx = -self.vx
             for i in bullets_sprite:
                 if self.rect.y < -50 or self.rect.y > 1050 or pygame.sprite.collide_mask(self, i):
-                    self.alive = 0
-                    self.time = 1
-                    self.image = load_image("collapse.png")
                     if pygame.sprite.collide_mask(self, i):
                         i.kill()
+                    self.alive = 0
+                    self.time = 1
+                    if self.typ == 1:
+                        self.image = load_image("collapse_sm.png")
+                    elif self.typ == 2:
+                        self.image = load_image("collapse_md.png")
+                    else:
+                        self.image = load_image("collapse.png")
+                    self.mask = pygame.mask.from_surface(self.image)
         else:
             self.rect = self.rect.move(self.vx // 3, self.vy // 3)
             self.time += 1
-            if self.time == 30:
+            if self.time == 5:
+                if self.typ == 1:
+                    self.image = load_image("collapse_sm1.png")
+                elif self.typ == 2:
+                    self.image = load_image("collapse_md1.png")
+                else:
+                    self.image = load_image("collapse1.png")
+
+            if self.time == 10:
+                if self.typ == 1:
+                    self.image = load_image("collapse_sm2.png")
+                elif self.typ == 2:
+                    self.image = load_image("collapse_md2.png")
+                else:
+                    self.image = load_image("collapse2.png")
+            if self.time == 15:
                 self.kill()
 
 
