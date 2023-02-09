@@ -139,13 +139,11 @@ class Border(pygame.sprite.Sprite):
             self.add(vertical_borders)
             self.image = pygame.Surface([1, y2 - y1])
             self.image.fill((49, 194, 119))
-            self.mask = pygame.mask.from_surface(self.image)
             self.rect = pygame.Rect(x1, y1, 1, y2 - y1)
         else:  # горизонтальная стенка
             self.add(horizontal_borders)
             self.image = pygame.Surface([x2 - x1, 1])
             self.image.fill((49, 194, 119))
-            self.mask = pygame.mask.from_surface(self.image)
             self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
 
 
@@ -158,7 +156,7 @@ class Asteroid(pygame.sprite.Sprite):
             self.image = load_image("asteroid.png")
         elif flag == 2:
             self.typ = 2
-            self.image = load_image("mid_asteroid.png")w
+            self.image = load_image("mid_asteroid.png")
         else:
             self.typ = 3
             self.image = load_image("big_asteroid.png")
@@ -169,15 +167,14 @@ class Asteroid(pygame.sprite.Sprite):
         self.rect.y = y
         self.time = None
         alive = 1
-        self.vx = random.randint(0, 5)
+        self.vx = random.randint(-5, 5)
         self.vy = random.randrange(10, 15)
 
     # движение с проверкой столкновение шара со стенками
     def update(self):
         if self.alive:
             self.rect = self.rect.move(self.vx, self.vy)
-            for i in vertical_borders:
-                if pygame.sprite.collide_mask(self, i):
+            if pygame.sprite.spritecollideany(self, vertical_borders):
                     self.vx = -self.vx
             for i in bullets_sprite:
                 if self.rect.y < -50 or self.rect.y > 1050 or pygame.sprite.collide_mask(self, i):
@@ -230,8 +227,7 @@ class Bonus(pygame.sprite.Sprite):
     # движение с проверкой столкновение шара со стенками
     def update(self):
         self.rect = self.rect.move(self.vx, self.vy)
-        for i in vertical_borders:
-            if pygame.sprite.collide_mask(self, i):
+        if pygame.sprite.spritecollideany(self, vertical_borders):
                 self.vx = -self.vx
 
 
