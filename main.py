@@ -158,10 +158,10 @@ class Asteroid(pygame.sprite.Sprite):
             self.image = load_image("asteroid.png")
         elif flag == 2:
             self.typ = 2
-            self.image = load_image("big_asteroid.png")
+            self.image = load_image("mid_asteroid.png")w
         else:
             self.typ = 3
-            self.image = load_image("mid_asteroid.png")
+            self.image = load_image("big_asteroid.png")
         self.rect = self.image.get_rect()
         # вычисляем маску для эффективного сравнения
         self.mask = pygame.mask.from_surface(self.image)
