@@ -30,11 +30,25 @@ def load_image(name, colorkey=None):
     return image
 
 
+class Soplo(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__(all_sprites)
+        self.add(all_sprites)
+        self.image = load_image("soplo.png")
+        self.rect = self.image.get_rect()
+        # вычисляем маску для эффективного сравнения
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.x = x - self.rect.w // 2
+        self.rect.y = y
+
+    def moving(self, x, y):
+        self.rect.x = x - self.rect.w // 2
+        self.rect.y = y
+
+
 class Spaceship(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__(all_sprites)
-        self.x = x
-        self.y = y
         self.bonuses = 1
         self.bonusrect = True
         self.add(all_sprites)
@@ -46,14 +60,20 @@ class Spaceship(pygame.sprite.Sprite):
         self.rect.y = y
 
     def moving(self, spaceship_delta_x, spaceship_delta_y):
-        if moving and 950 >= self.x + spaceship_delta_x >= 0 and 950 >= self.y + spaceship_delta_y >= 500:
-            self.x += spaceship_delta_x
-            self.y += spaceship_delta_y
-            self.rect = pygame.Rect(self.x, self.y, 50, 50)
+        if moving and 1000 >= self.rect.x + spaceship_delta_x + self.rect.w and \
+                self.rect.x + spaceship_delta_x >= 0 and \
+                970 >= self.rect.y + spaceship_delta_y + self.rect.w and self.rect.y + spaceship_delta_y >= 500 and \
+                spaceship_delta_y == 0 and spaceship_delta_x != 0:
+            self.rect.x = self.rect.x + spaceship_delta_x
+        elif moving and 1000 >= self.rect.x + spaceship_delta_x + self.rect.w \
+                and self.rect.x + spaceship_delta_x >= 0 and \
+                970 >= self.rect.y + spaceship_delta_y + self.rect.w and self.rect.y + spaceship_delta_y >= 500 and \
+                spaceship_delta_x == 0 and spaceship_delta_y != 0:
+            self.rect.y = self.rect.y + spaceship_delta_y
 
     def update(self):
         for i in asteroid_sprite:
-            if pygame.sprite.collide_mask(self, i):
+            if pygame.sprite.collide_mask(self, i) and i.alive:
                 self.kill()
                 pygame.quit()
         for i in bonuses_sprite:
@@ -62,6 +82,8 @@ class Spaceship(pygame.sprite.Sprite):
                 i.kill()
 
     def upd_img(self, fl):
+        x = self.rect.x
+        y = self.rect.y
         if fl == 0:
             self.image = load_image("spaceship.png")
         if fl == 1:
@@ -73,6 +95,8 @@ class Spaceship(pygame.sprite.Sprite):
         if fl == 4:
             self.image = load_image("right2.png")
         self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
         # вычисляем маску для эффективного сравнения
         self.mask = pygame.mask.from_surface(self.image)
 
@@ -80,8 +104,6 @@ class Spaceship(pygame.sprite.Sprite):
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__(all_sprites)
-        self.x = x
-        self.y = y
         self.add(all_sprites)
         self.add(bullets_sprite)
         self.image = load_image("bullet.png")
@@ -92,13 +114,11 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.y = y
 
     def update(self):
-        self.y -= 10
-        self.rect = pygame.Rect(self.x, self.y, 10, 10)
+        self.rect.y -= 10
+        self.rect = pygame.Rect(self.rect.x, self.rect.y, 10, 10)
         for i in asteroid_sprite:
-            if self.y < -50 or self.y > 1050 or pygame.sprite.collide_mask(self, i):
+            if (self.rect.y < -50 or self.rect.y > 1050 or pygame.sprite.collide_mask(self, i)) and i.alive:
                 self.kill()
-                if pygame.sprite.collide_mask(self, i):
-                    i.kill()
 
 
 class Border(pygame.sprite.Sprite):
@@ -123,8 +143,6 @@ class Border(pygame.sprite.Sprite):
 class Asteroid(pygame.sprite.Sprite):
     def __init__(self, x, y, flag):
         super().__init__(all_sprites)
-        self.x = x
-        self.y = y
         self.add(asteroid_sprite)
         if flag == 1:
             self.image = load_image("asteroid.png")
@@ -137,27 +155,35 @@ class Asteroid(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.x = x
         self.rect.y = y
+        self.time = None
+        alive = 1
         self.vx = random.randint(0, 5)
         self.vy = random.randrange(10, 15)
 
     # движение с проверкой столкновение шара со стенками
     def update(self):
-        self.rect = self.rect.move(self.vx, self.vy)
-        for i in vertical_borders:
-            if pygame.sprite.collide_mask(self, i):
-                self.vx = -self.vx
-        for i in bullets_sprite:
-            if self.y < -50 or self.y > 1050 or pygame.sprite.collide_mask(self, i):
-                self.kill()
+        if self.alive:
+            self.rect = self.rect.move(self.vx, self.vy)
+            for i in vertical_borders:
                 if pygame.sprite.collide_mask(self, i):
-                    i.kill()
+                    self.vx = -self.vx
+            for i in bullets_sprite:
+                if self.rect.y < -50 or self.rect.y > 1050 or pygame.sprite.collide_mask(self, i):
+                    self.alive = 0
+                    self.time = 1
+                    self.image = load_image("collapse.png")
+                    if pygame.sprite.collide_mask(self, i):
+                        i.kill()
+        else:
+            self.rect = self.rect.move(self.vx // 3, self.vy // 3)
+            self.time += 1
+            if self.time == 30:
+                self.kill()
 
 
 class Bonus(pygame.sprite.Sprite):
     def __init__(self, radius, y):
         super().__init__(all_sprites)
-        self.x = radius
-        self.y = y
         self.add(bonuses_sprite)
         self.image = load_image("bonus.png")
         self.rect = self.image.get_rect()
@@ -178,8 +204,8 @@ class Bonus(pygame.sprite.Sprite):
 
 Border(width - 0, 0, width - 0, height - 0)
 Border(-1, -1, -1, height + 1)
-
-spaceship = Spaceship(500, 900)
+soplo_fl = 0
+spaceship = Spaceship(500, 800)
 povorot = 0
 if __name__ == '__main__':
     pygame.init()
@@ -195,31 +221,34 @@ if __name__ == '__main__':
             if event.type == pygame.MOUSEBUTTONDOWN:
                 print(spaceship.bonuses)
                 if spaceship.bonuses == 1:
-                    bullet = Bullet(spaceship.x + 35, spaceship.y)
+                    bullet = Bullet(spaceship.rect.x + 35, spaceship.rect.y)
                 elif 3 > spaceship.bonuses > 1:
-                    bullet = Bullet(spaceship.x + 15, spaceship.y)
-                    bullet1 = Bullet(spaceship.x + 55, spaceship.y)
+                    bullet = Bullet(spaceship.rect.x + 15, spaceship.rect.y)
+                    bullet1 = Bullet(spaceship.rect.x + 55, spaceship.rect.y)
                 elif 3 <= spaceship.bonuses:
-                    bullet = Bullet(spaceship.x + 15, spaceship.y)
-                    bullet1 = Bullet(spaceship.x + 35, spaceship.y)
-                    bullet2 = Bullet(spaceship.x + 55, spaceship.y)
+                    bullet = Bullet(spaceship.rect.x + 15, spaceship.rect.y)
+                    bullet1 = Bullet(spaceship.rect.x + 35, spaceship.rect.y)
+                    bullet2 = Bullet(spaceship.rect.x + 55, spaceship.rect.y)
             if event.type == pygame.KEYDOWN:
                 moving = True
-                if pygame.key.get_pressed()[pygame.K_d]:
+                if event.key == pygame.K_d:
                     delta_x = 8
                     spaceship.upd_img(3)
                     count_mov = 1
                     povorot = 2
-                if pygame.key.get_pressed()[pygame.K_a]:
+                if event.key == pygame.K_a:
                     delta_x = -8
                     spaceship.upd_img(1)
                     count_mov = 1
                     povorot = 1
-                if pygame.key.get_pressed()[pygame.K_s]:
+                if event.key == pygame.K_s:
                     delta_y = 8
-                if pygame.key.get_pressed()[pygame.K_w]:
+                if event.key == pygame.K_w:
                     delta_y = -8
-                if pygame.key.get_pressed()[pygame.K_d] and pygame.key.get_pressed()[pygame.K_a]:
+                    if not soplo_fl:
+                        soplo = Soplo(spaceship.rect.x + (spaceship.rect.w // 2), spaceship.rect.y + spaceship.rect.h)
+                        soplo_fl = 1
+                if event.key == pygame.K_a and event.key == pygame.K_d:
                     delta_x = 0
                     spaceship.upd_img(0)
                     count_mov = 0
@@ -229,12 +258,8 @@ if __name__ == '__main__':
                 count_mov += 1
             if povorot == 1 and count_mov == 10:
                 spaceship.upd_img(2)
-                count_mov = 0
-                povorot = 0
             if povorot == 2 and count_mov == 10:
                 spaceship.upd_img(4)
-                count_mov = 0
-                povorot = 0
             if event.type == pygame.KEYUP and (event.key == pygame.K_a or event.key == pygame.K_d):
                 delta_x = 0
                 spaceship.upd_img(0)
@@ -242,14 +267,18 @@ if __name__ == '__main__':
                 povorot = 0
             if event.type == pygame.KEYUP and (event.key == pygame.K_w or event.key == pygame.K_s):
                 delta_y = 0
-                spaceship.upd_img(0)
-                count_mov = 0
-                povorot = 0
-        clock = pygame.time.Clock()
+                if povorot == 0:
+                    spaceship.upd_img(0)
+                if soplo_fl:
+                    soplo.kill()
+                    soplo_fl = 0
+
         fon = pygame.transform.scale(load_image('fon.png'), (width, height))
         screen.blit(fon, (0, 0))
         spaceship.moving(delta_x, 0)
         spaceship.moving(0, delta_y)
+        if soplo_fl:
+            soplo.moving(spaceship.rect.x + (spaceship.rect.w // 2), spaceship.rect.y + spaceship.rect.h)
         asteroids_count += 1
         bonuses_count += 1
         if asteroids_count % 2 == 0 and asteroids_count % 4 != 0 and asteroids_count % 6 != 0:
