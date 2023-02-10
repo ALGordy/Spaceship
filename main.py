@@ -13,6 +13,10 @@ delta_x = 0
 delta_y = 0
 asteroids_count = 0
 bonuses_count = 0
+asteroids = 0
+difficulty_game = 1
+flag = 0
+t = 0
 all_sprites = pygame.sprite.Group()
 horizontal_borders = pygame.sprite.Group()
 vertical_borders = pygame.sprite.Group()
@@ -21,6 +25,9 @@ asteroid_sprite = pygame.sprite.Group()
 bonuses_sprite = pygame.sprite.Group()
 buttons_sprite_menu = pygame.sprite.Group()
 buttons_sprite_difficulty = pygame.sprite.Group()
+game_over_sprite = pygame.sprite.Group()
+buttons_sprite_pause = pygame.sprite.Group()
+
 
 
 def load_image(name, colorkey=None):
@@ -74,14 +81,22 @@ class Spaceship(pygame.sprite.Sprite):
             self.rect.y = self.rect.y + spaceship_delta_y
 
     def update(self):
+        global flag
+        global playing
+        global dying
         for i in asteroid_sprite:
             if pygame.sprite.collide_mask(self, i) and i.alive:
-                self.kill()
-                pygame.quit()
+                self.image = load_image("destroy.png")
+                playing = False
+                dying = True
+                if soplo_fl:
+                    soplo.kill()
         for i in bonuses_sprite:
             if pygame.sprite.collide_mask(self, i) and self.bonusrect:
                 self.bonuses += 1
                 i.kill()
+                flag = 0
+
 
     def upd_img(self, fl):
         x = self.rect.x
@@ -116,6 +131,7 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.y = y
 
     def update(self):
+        global asteroids
         self.rect.y -= 10
         self.rect = pygame.Rect(self.rect.x, self.rect.y, 10, 10)
         for i in asteroid_sprite:
@@ -123,6 +139,7 @@ class Bullet(pygame.sprite.Sprite):
                 if pygame.sprite.collide_mask(self, i) and i.alive == 1:
                     i.alive = 0
                     i.time = 1
+                    asteroids += 1
                     if i.typ == 1:
                         i.image = load_image("collapse_sm.png")
                     elif i.typ == 2:
@@ -130,6 +147,80 @@ class Bullet(pygame.sprite.Sprite):
                     else:
                         i.image = load_image("collapse.png")
                 self.kill()
+
+
+class Bullet_diagonal_left(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__(all_sprites)
+        self.add(all_sprites)
+        self.add(bullets_sprite)
+        self.image = load_image("bul_left.png")
+        self.rect = self.image.get_rect()
+        # вычисляем маску для эффективного сравнения
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.x = x
+        self.rect.y = y
+
+    def update(self):
+        global asteroids
+        self.rect.y -= 10
+        self.rect.x -= 3
+        self.rect = pygame.Rect(self.rect.x, self.rect.y, 10, 10)
+        for i in asteroid_sprite:
+            if self.rect.y < -50 or self.rect.y > 1000 or (pygame.sprite.collide_mask(self, i) and i.alive == 1):
+                if pygame.sprite.collide_mask(self, i) and i.alive == 1:
+                    i.alive = 0
+                    i.time = 1
+                    asteroids += 1
+                    if i.typ == 1:
+                        i.image = load_image("collapse_sm.png")
+                    elif i.typ == 2:
+                        i.image = load_image("collapse_md.png")
+                    else:
+                        i.image = load_image("collapse.png")
+                self.kill()
+
+
+class Bullet_diagonal_right(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__(all_sprites)
+        self.add(all_sprites)
+        self.add(bullets_sprite)
+        self.image = load_image("bul_right.png")
+        self.rect = self.image.get_rect()
+        # вычисляем маску для эффективного сравнения
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.x = x
+        self.rect.y = y
+
+    def update(self):
+        global asteroids
+        self.rect.y -= 10
+        self.rect.x += 3
+        self.rect = pygame.Rect(self.rect.x, self.rect.y, 10, 10)
+        for i in asteroid_sprite:
+            if self.rect.y < -50 or self.rect.y > 1000 or (pygame.sprite.collide_mask(self, i) and i.alive == 1):
+                if pygame.sprite.collide_mask(self, i) and i.alive == 1:
+                    i.alive = 0
+                    i.time = 1
+                    asteroids += 1
+                    if i.typ == 1:
+                        i.image = load_image("collapse_sm.png")
+                    elif i.typ == 2:
+                        i.image = load_image("collapse_md.png")
+                    else:
+                        i.image = load_image("collapse.png")
+                self.kill()
+
+
+class Buttons_pause(pygame.sprite.Sprite):
+    def __init__(self, image, x, y):
+        super().__init__(buttons_sprite_pause)
+        self.image = load_image(image)
+        self.add(buttons_sprite_pause)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
 
 
 class Border(pygame.sprite.Sprite):
@@ -168,12 +259,13 @@ class Asteroid(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
         self.time = None
-        alive = 1
+        self.alive = 1
         self.vx = random.randint(-5, 5)
         self.vy = random.randrange(10, 15)
 
     # движение с проверкой столкновение шара со стенками
     def update(self):
+        global asteroids
         if self.alive:
             self.rect = self.rect.move(self.vx, self.vy)
             if pygame.sprite.spritecollideany(self, vertical_borders):
@@ -182,6 +274,7 @@ class Asteroid(pygame.sprite.Sprite):
                 if self.rect.y < -50 or self.rect.y > 1050 or pygame.sprite.collide_mask(self, i):
                     if pygame.sprite.collide_mask(self, i):
                         i.kill()
+                        asteroids += 1
                     self.alive = 0
                     self.time = 1
                     if self.typ == 1:
@@ -253,6 +346,21 @@ class Buttons_difficulty(pygame.sprite.Sprite):
         self.rect.y = y
 
 
+class Image(pygame.sprite.Sprite):
+
+    def __init__(self, group, fl):
+        # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
+        # Это очень важно !!!
+        super().__init__(group)
+        if fl == 0:
+            self.image = load_image("gameover.png")
+        else:
+            self.image = load_image("win.png")
+        self.rect = self.image.get_rect()
+        self.rect.x = 0
+        self.rect.y = 0
+
+
 Border(width - 0, 0, width - 0, height - 0)
 Border(-1, -1, -1, height + 1)
 soplo_fl = 0
@@ -270,12 +378,18 @@ if __name__ == '__main__':
     playing = False
     menu = True
     difficulty = False
+    dying = False
+    time = 0
+    pause = False
+    f1 = pygame.font.Font(None, 36)
+    f2 = pygame.font.Font(None, 42)
     while running:
         while menu:
-            play = Buttons_menu('play.png', 450, 450)
-            quit = Buttons_menu('quit.png', 450, 550)
+            play = Buttons_menu('play.png', 425, 400)
+            quit = Buttons_menu('quit.png', 425, 475)
             fon_menu = pygame.transform.scale(load_image('fon_menu.png'), (width, height))
             screen.blit(fon_menu, (0, 0))
+
             buttons_sprite_menu.draw(screen)
             pygame.display.flip()
             for event in pygame.event.get():
@@ -284,6 +398,7 @@ if __name__ == '__main__':
                     menu = False
                     playing = False
                     difficulty = False
+                    pause = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if play.rect.collidepoint(event.pos):
                         difficulty = True
@@ -293,13 +408,17 @@ if __name__ == '__main__':
                         menu = False
                         playing = False
                         difficulty = False
+                        pause = False
         while difficulty:
-            easy = Buttons_difficulty('easy.png', 450, 400)
-            medium = Buttons_difficulty('medium.png', 450, 450)
-            hard = Buttons_difficulty('hard.png', 450, 500)
+            text2 = f2.render(f'Select difficulty:', True,
+                              (255, 255, 255))
+            easy = Buttons_difficulty('easy.png', 425, 350)
+            medium = Buttons_difficulty('medium.png', 425, 425)
+            hard = Buttons_difficulty('hard.png', 425, 500)
             fon_menu = pygame.transform.scale(load_image('fon_menu.png'), (width, height))
             screen.blit(fon_menu, (0, 0))
             buttons_sprite_difficulty.draw(screen)
+            screen.blit(text2, (385, 300))
             pygame.display.flip()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -307,6 +426,7 @@ if __name__ == '__main__':
                     menu = False
                     difficulty = False
                     playing = False
+                    pause = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if easy.rect.collidepoint(event.pos):
                         playing = True
@@ -320,7 +440,88 @@ if __name__ == '__main__':
                         playing = True
                         difficulty = False
                         difficulty_game = 1
+        while pause:
+            cont = Buttons_pause('continue.png', 425, 300)
+            retry = Buttons_pause('retry.png', 425, 375)
+            menu = Buttons_pause('menu.png', 425, 450)
+            quit = Buttons_pause('quit.png', 425, 525)
+            fon_menu = pygame.transform.scale(load_image('fon_menu.png'), (width, height))
+            screen.blit(fon_menu, (0, 0))
+            buttons_sprite_pause.draw(screen)
+            pygame.display.flip()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    menu = False
+                    difficulty = False
+                    playing = False
+                    pause = False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if cont.rect.collidepoint(event.pos):
+                        pause = False
+                        playing = True
+                    if retry.rect.collidepoint(event.pos):
+                        pause = False
+                        playing = True
+                        screen.fill((0, 0, 0))
+                        pygame.display.flip()
+                        delta_x = 0
+                        delta_y = 0
+                        asteroids_count = 0
+                        bonuses_count = 0
+                        all_sprites = pygame.sprite.Group()
+                        horizontal_borders = pygame.sprite.Group()
+                        vertical_borders = pygame.sprite.Group()
+                        bullets_sprite = pygame.sprite.Group()
+                        asteroid_sprite = pygame.sprite.Group()
+                        bonuses_sprite = pygame.sprite.Group()
+                        buttons_sprite_menu = pygame.sprite.Group()
+                        buttons_sprite_difficulty = pygame.sprite.Group()
+                        game_over_sprite = pygame.sprite.Group()
+                        Border(width - 0, 0, width - 0, height - 0)
+                        Border(-1, -1, -1, height + 1)
+                        soplo_fl = 0
+                        spaceship = Spaceship(500, 800)
+                        povorot = 0
+                        count_mov = 0
+                        time = 0
+                        t = 0
+                        asteroids = 0
+                    if menu.rect.collidepoint(event.pos):
+                        pause = False
+                        menu = True
+                        screen.fill((0, 0, 0))
+                        pygame.display.flip()
+                        delta_x = 0
+                        delta_y = 0
+                        asteroids_count = 0
+                        bonuses_count = 0
+                        all_sprites = pygame.sprite.Group()
+                        horizontal_borders = pygame.sprite.Group()
+                        vertical_borders = pygame.sprite.Group()
+                        bullets_sprite = pygame.sprite.Group()
+                        asteroid_sprite = pygame.sprite.Group()
+                        bonuses_sprite = pygame.sprite.Group()
+                        buttons_sprite_menu = pygame.sprite.Group()
+                        buttons_sprite_difficulty = pygame.sprite.Group()
+                        game_over_sprite = pygame.sprite.Group()
+                        Border(width - 0, 0, width - 0, height - 0)
+                        Border(-1, -1, -1, height + 1)
+                        soplo_fl = 0
+                        spaceship = Spaceship(500, 800)
+                        povorot = 0
+                        count_mov = 0
+                        time = 0
+                        t = 0
+                        asteroids = 0
+                    if quit.rect.collidepoint(event.pos):
+                        running = False
+                        menu = False
+                        playing = False
+                        difficulty = False
+                        pause = False
         while playing:
+            time += 1
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -332,11 +533,16 @@ if __name__ == '__main__':
                         bullet = Bullet(spaceship.rect.x + 15, spaceship.rect.y)
                         bullet1 = Bullet(spaceship.rect.x + 55, spaceship.rect.y)
                     elif 3 <= spaceship.bonuses:
-                        bullet = Bullet(spaceship.rect.x + 15, spaceship.rect.y)
+                        bullet = Bullet_diagonal_left(spaceship.rect.x + 15, spaceship.rect.y)
                         bullet1 = Bullet(spaceship.rect.x + 35, spaceship.rect.y)
-                        bullet2 = Bullet(spaceship.rect.x + 55, spaceship.rect.y)
+                        bullet2 = Bullet_diagonal_right(spaceship.rect.x + 55, spaceship.rect.y)
                 if event.type == pygame.KEYDOWN:
                     moving = True
+                    if event.key == pygame.K_ESCAPE:
+                        pause = True
+                        menu = False
+                        difficulty = False
+                        playing = False
                     if event.key == pygame.K_d:
                         delta_x = 8
                         spaceship.upd_img(3)
@@ -388,14 +594,63 @@ if __name__ == '__main__':
                 soplo.moving(spaceship.rect.x + (spaceship.rect.w // 2), spaceship.rect.y + spaceship.rect.h)
             asteroids_count += 1
             bonuses_count += 1
-            if asteroids_count % (3 * difficulty_game) == 0 and asteroids_count % (6 * difficulty_game) != 0 and asteroids_count % (9 * difficulty_game) != 0:
+            if asteroids_count % (3 * difficulty_game) == 0 and asteroids_count % (
+                    6 * difficulty_game) != 0 and asteroids_count % (9 * difficulty_game) != 0:
                 Asteroid(random.randint(0, width), -30, 0)
             if asteroids_count % (6 * difficulty_game) == 0 and asteroids_count % (9 * difficulty_game) != 0:
                 Asteroid(random.randint(0, width), -30, 1)
             if asteroids_count % (9 * difficulty_game) == 0:
                 Asteroid(random.randint(0, width), -30, 2)
+            if bonuses_count % 100 == 0 and spaceship.bonuses != 3:
+                Bonus(random.randint(0, width), -30)
+            text1 = f1.render(f'number of asteroids destroyed:{asteroids}', True,
+                              (180, 0, 0))
             all_sprites.update()
             all_sprites.draw(screen)
+            screen.blit(text1, (10, 25))
             pygame.display.flip()
             clock.tick(FPS)
+            if time == 18000 or asteroids > 100:
+                t = 0
+                flag = 1
+                dying = True
+                playing = False
+        while dying:
+            img = Image(game_over_sprite, flag)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+            game_over_sprite.update()
+            game_over_sprite.draw(screen)
+            pygame.display.flip()
+            clock.tick(FPS)
+            t += 1
+            if t >= 20:
+                screen.fill((0, 0, 0))
+                pygame.display.flip()
+                menu = True
+                dying = False
+                delta_x = 0
+                delta_y = 0
+                asteroids_count = 0
+                bonuses_count = 0
+                all_sprites = pygame.sprite.Group()
+                horizontal_borders = pygame.sprite.Group()
+                vertical_borders = pygame.sprite.Group()
+                bullets_sprite = pygame.sprite.Group()
+                asteroid_sprite = pygame.sprite.Group()
+                bonuses_sprite = pygame.sprite.Group()
+                buttons_sprite_menu = pygame.sprite.Group()
+                buttons_sprite_difficulty = pygame.sprite.Group()
+                game_over_sprite = pygame.sprite.Group()
+                Border(width - 0, 0, width - 0, height - 0)
+                Border(-1, -1, -1, height + 1)
+                soplo_fl = 0
+                spaceship = Spaceship(500, 800)
+                povorot = 0
+                count_mov = 0
+                time = 0
+                t = 0
+                asteroids = 0
+                flag = 0
     pygame.quit()
