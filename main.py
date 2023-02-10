@@ -212,8 +212,8 @@ if __name__ == '__main__':
     count_mov = 0
     while running:
         while menu:
-            play = Buttons_menu('play.jpg', 450, 450)
-            quit = Buttons_menu('quit.jpg', 450, 550)
+            play = Buttons_menu('play.png', 450, 450)
+            quit = Buttons_menu('quit.png', 450, 550)
             fon_menu = pygame.transform.scale(load_image('fon_menu.png'), (width, height))
             screen.blit(fon_menu, (0, 0))
             buttons_sprite_menu.draw(screen)
@@ -234,9 +234,9 @@ if __name__ == '__main__':
                         playing = False
                         difficulty = False
         while difficulty:
-            easy = Buttons_difficulty('easy.jpg', 450, 400)
-            medium = Buttons_difficulty('medium.jpg', 450, 450)
-            hard = Buttons_difficulty('hard.jpg', 450, 500)
+            easy = Buttons_difficulty('easy.png', 450, 400)
+            medium = Buttons_difficulty('medium.png', 450, 450)
+            hard = Buttons_difficulty('hard.png', 450, 500)
             fon_menu = pygame.transform.scale(load_image('fon_menu.png'), (width, height))
             screen.blit(fon_menu, (0, 0))
             buttons_sprite_difficulty.draw(screen)
