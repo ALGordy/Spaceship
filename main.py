@@ -654,3 +654,4 @@ if __name__ == '__main__':
                 asteroids = 0
                 flag = 0
     pygame.quit()
+
