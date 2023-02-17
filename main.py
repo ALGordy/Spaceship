@@ -3,6 +3,7 @@ import random
 import sys
 import os
 
+vol = 0.5
 width, height = 800, 800
 FPS = 35
 size = width, height
@@ -35,6 +36,8 @@ shield_sprite = pygame.sprite.Group()
 shield_image_sprite = pygame.sprite.Group()
 spaceship_sprite = pygame.sprite.Group()
 pygame.display.set_caption('Spaceship')
+f = open("data/stat.txt", mode="r")
+max_ast = int(f.read()[0])
 
 
 def load_image(name, colorkey=None):
@@ -494,6 +497,10 @@ if __name__ == '__main__':
     f1 = pygame.font.Font(None, 36)
     f2 = pygame.font.Font(None, 42)
     endless_survival = False
+    pygame.mixer.music.load("data/drive.mp3")
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.pause()
+    pygame.mixer.music.set_volume(vol)
     while running:
         play = Buttons_menu('play.png', 425 * 0.8, 400 * 0.8)
         quit = Buttons_menu('quit.png', 425 * 0.8, 475 * 0.8)
@@ -519,6 +526,9 @@ if __name__ == '__main__':
         while menu:
             screen.blit(fon_menu, (0, 0))
             buttons_sprite_menu.draw(screen)
+            text4 = f1.render(f'maximum asteroid destroyed:{max_ast}', True,
+                              (180, 0, 0))
+            screen.blit(text4, (10, 25))
             pygame.display.flip()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -541,6 +551,9 @@ if __name__ == '__main__':
             screen.blit(fon_menu, (0, 0))
             screen.blit(text3, (400 * 0.8, 330 * 0.8))
             buttons_sprite_mode.draw(screen)
+            text4 = f1.render(f'maximum asteroid destroyed:{max_ast}', True,
+                              (180, 0, 0))
+            screen.blit(text4, (10, 25))
             pygame.display.flip()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -564,6 +577,9 @@ if __name__ == '__main__':
             screen.blit(fon_menu, (0, 0))
             buttons_sprite_difficulty.draw(screen)
             screen.blit(text2, (385 * 0.8, 300 * 0.8))
+            text4 = f1.render(f'maximum asteroid destroyed:{max_ast}', True,
+                              (180, 0, 0))
+            screen.blit(text4, (10, 25))
             pygame.display.flip()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -586,6 +602,7 @@ if __name__ == '__main__':
                         difficulty = False
                         difficulty_game = 3
         while pause:
+            pygame.mixer.music.pause()
             screen.blit(fon_menu, (0, 0))
             buttons_sprite_pause.draw(screen)
             pygame.display.flip()
@@ -666,6 +683,7 @@ if __name__ == '__main__':
                         pause = False
         while playing:
             time += 1
+            pygame.mixer.music.unpause()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -711,6 +729,14 @@ if __name__ == '__main__':
                         spaceship.upd_img(0)
                         count_mov = 0
                         povorot = 0
+                    elif event.key == pygame.K_PAGEDOWN:
+                        if vol >= 0.1:
+                            vol -= 0.1
+                            pygame.mixer.music.set_volume(vol)
+                    elif event.key == pygame.K_PAGEUP:
+                        if vol <= 0.9:
+                            vol += 0.1
+                            pygame.mixer.music.set_volume(vol)
 
                 if count_mov != 0:
                     count_mov += 1
@@ -741,7 +767,7 @@ if __name__ == '__main__':
             asteroids_count += 1
             bonuses_count += 1
             if asteroids_count % (1 * difficulty_game) == 0 and asteroids_count % (
-                   2 * difficulty_game) != 0 and asteroids_count % (3 * difficulty_game) != 0:
+                    2 * difficulty_game) != 0 and asteroids_count % (3 * difficulty_game) != 0:
                 Asteroid(random.randint(0, width - 50), -30, 0)
             if asteroids_count % (2 * difficulty_game) == 0 and asteroids_count % (3 * difficulty_game) != 0:
                 Asteroid(random.randint(0, width - 50), -30, 1)
@@ -769,7 +795,16 @@ if __name__ == '__main__':
                     dying = True
                     playing = False
         while dying:
+            pygame.mixer.music.load("data/drive.mp3")
+            pygame.mixer.music.play(-1)
+            pygame.mixer.music.pause()
             img = Image(game_over_sprite, flag)
+            if max_ast < asteroids:
+                r = open("data/stat.txt", 'w')
+                r.write(str(asteroids))
+                r.close()
+                max_ast = asteroids
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
