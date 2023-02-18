@@ -526,9 +526,9 @@ if __name__ == '__main__':
         while menu:
             screen.blit(fon_menu, (0, 0))
             buttons_sprite_menu.draw(screen)
-            text4 = f1.render(f'maximum asteroid destroyed:{max_ast}', True,
-                              (180, 0, 0))
-            screen.blit(text4, (10, 25))
+            text4 = f1.render(f'your best score:{max_ast}', True,
+                              (255, 255, 255))
+            screen.blit(text4, (320, 200))
             pygame.display.flip()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -551,9 +551,9 @@ if __name__ == '__main__':
             screen.blit(fon_menu, (0, 0))
             screen.blit(text3, (400 * 0.8, 330 * 0.8))
             buttons_sprite_mode.draw(screen)
-            text4 = f1.render(f'maximum asteroid destroyed:{max_ast}', True,
-                              (180, 0, 0))
-            screen.blit(text4, (10, 25))
+            text4 = f1.render(f'your best score:{max_ast}', True,
+                              (255, 255, 255))
+            screen.blit(text4, (320, 200))
             pygame.display.flip()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -577,9 +577,9 @@ if __name__ == '__main__':
             screen.blit(fon_menu, (0, 0))
             buttons_sprite_difficulty.draw(screen)
             screen.blit(text2, (385 * 0.8, 300 * 0.8))
-            text4 = f1.render(f'maximum asteroid destroyed:{max_ast}', True,
-                              (180, 0, 0))
-            screen.blit(text4, (10, 25))
+            text4 = f1.render(f'your best score:{max_ast}', True,
+                              (255, 255, 255))
+            screen.blit(text4, (320, 200))
             pygame.display.flip()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
